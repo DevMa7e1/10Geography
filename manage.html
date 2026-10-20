@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Modify randomized list</title>
+    </head>
+    <script>
+        function createps(){
+            if(document.cookie.includes('location=')){
+                let locations = document.cookie.split(';')[0].split('=')[1].split(',');
+                let positions = document.cookie.split(';')[1].split('=')[1].split(',');
+                for(let i = 0; i < locations.length; i++){
+                    document.body.innerHTML += '<p>' + locations[i] + " @ " + positions[i] + '</p>';
+                }
+            }
+        }
+    </script>
+    <body onload="createps()">
+        <button onclick="document.cookie = 'location=Danube delta'; document.cookie = 'position=45°09N 29°22E'">Add</button>
+        <button onclick="console.log(document.cookie)">Check</button>
+    </body>
+</html>
