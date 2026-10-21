@@ -5,17 +5,72 @@
     </head>
     <script>
         function createps(){
-            if(document.cookie.includes('location=')){
-                let locations = document.cookie.split(';')[0].split('=')[1].split(',');
-                let positions = document.cookie.split(';')[1].split('=')[1].split(',');
-                for(let i = 0; i < locations.length; i++){
-                    document.body.innerHTML += '<p>' + locations[i] + " @ " + positions[i] + '</p>';
-                }
+            let add = '';
+            for(let i = 0; i < document.cookie.split('; ').length; i++){
+                add += '<div class="container">';
+                add += '<p>' + document.cookie.split('; ')[i].split('=')[0] + ' @ ' + document.cookie.split(';')[i].split('=')[1] + '</p>';
+                add += '<a href="/remove?name=' + document.cookie.split('; ')[i].split('=')[0] + '"><button class="right">Delete</button></a><br>';
+                add += '</div>';
+                document.body.innerHTML += add;
             }
         }
     </script>
+    <style>
+        .namelabel{
+            font-size: 20px;
+            padding-left: 4px;
+            width: fit-content;
+            height: 10px;
+            padding-top: 0px;
+            margin-top: 0px;
+        }
+        .addform{
+            width: min-content;
+            overflow: hidden;
+        }
+        .container{
+            background-color: gainsboro;
+            width: max-content;
+            border-radius: 10px;
+            margin-top: 5px;
+            padding: 5px;
+            overflow: hidden;
+        }
+        input[type="text"]{
+            border-radius: 10px;
+            border-width: 0px;
+            padding: 5px;
+        }
+        input[type="submit"]{
+            border-radius: 10px;
+            border-width: 0px;
+            padding: 5px;
+            margin-top: 5px;
+            float: right;
+        }
+        .padded{
+            margin-bottom: 0px;
+        }
+        button{
+            border-radius: 10px;
+            border-width: 0px;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        .right{
+            float: right;
+        }
+    </style>
     <body onload="createps()">
-        <button onclick="document.cookie = 'location=Danube delta'; document.cookie = 'position=45°09N 29°22E'">Add</button>
-        <button onclick="console.log(document.cookie)">Check</button>
+         <p class="namelabel">Add a new location</p>
+        <div class="container">
+            <form action="/add_location" class="addform">
+                <input type="text" id="name" name="name" class="padded" placeholder="Location">
+                <hr width="90%" size="1" noshade="" color="#AAAAAA">
+                <input type="text" id="pos" name="pos" class="padded" placeholder="Coordinates">
+                <input type="submit" value="Add", class="padded">
+            </form>
+        </div>
+        <hr noshade color="#AAAAAA" size="1">
     </body>
 </html>
