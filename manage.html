@@ -3,18 +3,6 @@
     <head>
         <title>Modify randomized list</title>
     </head>
-    <script>
-        function createps(){
-            let add = '';
-            for(let i = 0; i < document.cookie.split('; ').length; i++){
-                add += '<div class="container">';
-                add += '<p>' + document.cookie.split('; ')[i].split('=')[0] + ' @ ' + document.cookie.split(';')[i].split('=')[1] + '</p>';
-                add += '<a href="/remove?name=' + document.cookie.split('; ')[i].split('=')[0] + '"><button class="right">Delete</button></a><br>';
-                add += '</div>';
-                document.body.innerHTML += add;
-            }
-        }
-    </script>
     <style>
         .namelabel{
             font-size: 20px;
@@ -51,6 +39,9 @@
         .padded{
             margin-bottom: 0px;
         }
+        .fillall{
+            width: 80%;
+        }
         button{
             border-radius: 10px;
             border-width: 0px;
@@ -60,17 +51,46 @@
         .right{
             float: right;
         }
+        .selector{
+            position: relative;
+        }
     </style>
+    <script src="static/jquery.js"></script>
+    <script>
+        function createps(){
+            let add = '';
+            let cookies = document.cookie.split('; ');
+            for(let i = 0; i < cookies.length; i++){
+                add += '<div class="container">';
+                add += '<p>' + cookies[i].split('=')[0] + ' @ ' + cookies[i].split('=')[1] + '</p>';
+                add += '<a href="/remove?name=' + cookies[i].split('=')[0] + '"><button class="right">Delete</button></a><br>';
+                add += '</div>';
+            }
+            document.body.innerHTML += add;
+        }
+        function getpos(e) {
+            var rect = e.target.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var y = e.clientY - rect.top;
+            document.getElementById('sel').style.top = String(y-480)+"px";
+            document.getElementById('sel').style.left = String(x)+"px";
+        }
+    </script>
     <body onload="createps()">
          <p class="namelabel">Add a new location</p>
         <div class="container">
             <form action="/add_location" class="addform">
-                <input type="text" id="name" name="name" class="padded" placeholder="Location">
+                <input type="text" id="name" name="name" class="padded fillall" placeholder="Location name">
                 <hr width="90%" size="1" noshade="" color="#AAAAAA">
-                <input type="text" id="pos" name="pos" class="padded" placeholder="Coordinates">
+                <div id="map">
+                    <img src="thumbnail-image" onload="document.getElementById('map').onclick = getpos">
+                    <img src="static/pin.png" class="selector" id="sel" width="20" height="20">
+                </div>
                 <input type="submit" value="Add", class="padded">
             </form>
         </div>
         <hr noshade color="#AAAAAA" size="1">
+        <script>
+        </script>
     </body>
 </html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Select answer</title>
+        <style>
+            .namelabel{
+                font-size: 20px;
+                padding-left: 4px;
+                width: fit-content;
+                height: 10px;
+                padding-top: 0px;
+                margin-top: 0px;
+            }
+            .addform{
+                width: min-content;
+                overflow: hidden;
+            }
+            .container{
+                background-color: gainsboro;
+                width: max-content;
+                border-radius: 10px;
+                margin-top: 5px;
+                padding: 5px;
+                overflow: hidden;
+            }
+            input[type="text"]{
+                border-radius: 10px;
+                border-width: 0px;
+                padding: 5px;
+            }
+            input[type="submit"]{
+                border-radius: 10px;
+                border-width: 0px;
+                padding: 5px;
+                margin-top: 5px;
+                float: right;
+            }
+            .padded{
+                margin-bottom: 0px;
+            }
+            button{
+                border-radius: 10px;
+                border-width: 0px;
+                padding: 5px;
+                margin-top: 5px;
+            }
+            .right{
+                float: right;
+            }
+            body{
+                font-family: sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Choose the correct answer:</h1>
+        <p class="namelabel">Location: %loc</p>
+        <div class="container">
+            <form action="/check">
+                <input type="radio" name="ch" id="ch1">
+                <label for="c1">%ch0</label><br>
+                <input type="radio" name="ch" id="ch2">
+                <label for="c2">%ch1</label><br>
+                <input type="radio" name="ch" id="ch3">
+                <label for="c3">%ch2</label><br>
+                <input type="radio" name="ch" id="ch4">
+                <label for="c4">%ch3</label><br>
+                <input type="submit" value="Send">
+            </form>
+        </div>
+    </body>
+</html>
