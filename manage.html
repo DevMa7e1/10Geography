@@ -53,6 +53,11 @@
         }
         .selector{
             position: relative;
+            top: -200px;
+            left: -200px;
+        }
+        .posinput{
+            visibility: hidden;
         }
     </style>
     <script src="static/jquery.js"></script>
@@ -72,8 +77,10 @@
             var rect = e.target.getBoundingClientRect();
             var x = e.clientX - rect.left;
             var y = e.clientY - rect.top;
-            document.getElementById('sel').style.top = String(y-480)+"px";
-            document.getElementById('sel').style.left = String(x)+"px";
+            document.getElementById('sel').style.top = String(y-495)+"px";
+            document.getElementById('sel').style.left = String(x-5)+"px";
+            document.getElementById('xpos').value = x;
+            document.getElementById('ypos').value = y;
         }
     </script>
     <body onload="createps()">
@@ -84,8 +91,10 @@
                 <hr width="90%" size="1" noshade="" color="#AAAAAA">
                 <div id="map">
                     <img src="thumbnail-image" onload="document.getElementById('map').onclick = getpos">
-                    <img src="static/pin.png" class="selector" id="sel" width="20" height="20">
+                    <img src="static/pin.png" class="selector" id="sel" width="10" height="10">
                 </div>
+                <input type="number" name="xpos" id="xpos" class="posinput">
+                <input type="number" name="ypos" id="ypos" class="posinput">
                 <input type="submit" value="Add", class="padded">
             </form>
         </div>
