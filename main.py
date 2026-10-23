@@ -7,6 +7,54 @@ from io import BytesIO
 
 app = Flask(__name__)
 mapoftheworld = Image.open('./data/map.jpg')
+print("Preparing world map...")
+halfsize = mapoftheworld.resize((mapoftheworld.width/2, mapoftheworld.height/2))
+quartersize = mapoftheworld.resize((mapoftheworld.width/4, mapoftheworld.height/4))
+print("Done!\n")
+
+def request_image(box: tuple[int, int, int, int]):
+    c = 22.5
+    def get_safe_box(rx1, ry1, rx2, ry2):
+        x1 = rx1*c; y1 = ry1*c; x2 = rx2*c; y2 = ry2*c
+        xadd = 0
+        yadd = 0
+        if x1 < 0:
+            xadd = 0-x1
+            x1 += xadd
+        if y1 < 0:
+            yadd = 0-y1
+            y1 += yadd
+        x2 += xadd
+        y2 += yadd
+        xsub = 0
+        ysub = 0
+        if x2 > mapoftheworld.width:
+            xsub = x2-mapoftheworld.width
+            x2 -= xsub
+        if y2 > mapoftheworld.height:
+                    ysub = y2-mapoftheworld.height
+                    y2 -= ysub
+        x1 -= xsub
+        y1 -= ysub
+        return int(x1), int(y1), int(x2), int(y2)
+    box = get_safe_box(*box)
+    cropped: Image.Image = mapoftheworld.crop(box)
+    cropped.paste(Image.open('./static/pin.png'), (int(28*c), int(20*c)), Image.open('./static/pin.png'))
+    cropped = cropped.resize((int(28*c), int(20*c)))
+    s = BytesIO()
+    cropped.save(s, format='jpeg')
+    val = s.getvalue()
+    s.close()
+    return val
+
+@app.route('/request_image')
+def get_image():
+    posx = int(request.args['x'])
+    posy = int(request.args['y'])
+    zoom = float(request.args['z'])
+    box = (int(posx-28*zoom), int(posy-20*zoom), int(posx+28*zoom), int(posy+20*zoom))
+    image = request_image(box)
+    return 'data:image/jpeg;base64,'+b64encode(image).decode()
 
 @app.route('/select')
 def select():
@@ -26,14 +74,10 @@ def select():
         r = r.replace(f'%ch{i}', choice.split('=')[0].removeprefix(' '))
     answer = random.choice(chosen)
     pos = answer.split('=')[1].split('l')
-    c = 22.5
-    box = (int((int(pos[0])-28)*c), int((int(pos[1])-20)*c), int((int(pos[0])+28)*c), int((int(pos[1])+20)*c))
-    cropped = mapoftheworld.crop(box)
-    cropped.paste(Image.open('./static/pin.png'), (int(28*c), int(20*c)), Image.open('./static/pin.png'))
-    cropped = cropped.resize((int(28*c), int(20*c)))
-    s = BytesIO()
-    cropped.save(s, format='jpeg')
-    r = r.replace('mapimage', 'data:image/jpeg;base64,'+b64encode(s.getvalue()).decode())
+    
+    box = (int(pos[0])-28, int(pos[1])-20, int(pos[0])+28, int(pos[1])+20)
+    image = request_image(box)
+    r = r.replace('mapimage', 'data:image/jpeg;base64,'+b64encode(image).decode())
     rp = make_response(r)
     rp.set_cookie('answer', answer.split('=')[0])
     return rp
