@@ -70,6 +70,13 @@ def get_image():
     image = request_image(box, float(zoom))
     return 'data:image/jpeg;base64,'+b64encode(image).decode()
 
+@app.route('/request_full')
+def get_full():
+    s = BytesIO()
+    quartersize.save(s, format='jpeg')
+    val = s.getvalue()
+    s.close()
+    return 'data:image/jpeg;base64,'+b64encode(val).decode()
 @app.route('/select')
 def select():
     f = open('respond.html')
