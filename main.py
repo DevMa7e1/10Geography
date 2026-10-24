@@ -8,13 +8,15 @@ from io import BytesIO
 app = Flask(__name__)
 mapoftheworld = Image.open('./data/map.jpg')
 print("Preparing world map...")
-halfsize = mapoftheworld.resize((mapoftheworld.width/2, mapoftheworld.height/2))
-quartersize = mapoftheworld.resize((mapoftheworld.width/4, mapoftheworld.height/4))
+halfsize = mapoftheworld.resize((mapoftheworld.width//2, mapoftheworld.height//2), resample=Image.Resampling.NEAREST)
+quartersize = mapoftheworld.resize((mapoftheworld.width//4, mapoftheworld.height//4), resample=Image.Resampling.NEAREST)
+initcrop = mapoftheworld.crop((0, 0, 100, 100))
+del initcrop
 print("Done!\n")
 
-def request_image(box: tuple[int, int, int, int]):
+def request_image(box: tuple[int, int, int, int], zoom: float = 1.0):
     c = 22.5
-    def get_safe_box(rx1, ry1, rx2, ry2):
+    def get_safe_box(rx1, ry1, rx2, ry2, image):
         x1 = rx1*c; y1 = ry1*c; x2 = rx2*c; y2 = ry2*c
         xadd = 0
         yadd = 0
@@ -28,19 +30,31 @@ def request_image(box: tuple[int, int, int, int]):
         y2 += yadd
         xsub = 0
         ysub = 0
-        if x2 > mapoftheworld.width:
-            xsub = x2-mapoftheworld.width
+        if x2 > image.width:
+            xsub = x2-image.width
             x2 -= xsub
-        if y2 > mapoftheworld.height:
-                    ysub = y2-mapoftheworld.height
+        if y2 > image.height:
+                    ysub = y2-image.height
                     y2 -= ysub
         x1 -= xsub
         y1 -= ysub
-        return int(x1), int(y1), int(x2), int(y2)
-    box = get_safe_box(*box)
-    cropped: Image.Image = mapoftheworld.crop(box)
-    cropped.paste(Image.open('./static/pin.png'), (int(28*c), int(20*c)), Image.open('./static/pin.png'))
-    cropped = cropped.resize((int(28*c), int(20*c)))
+        return (int(x1), int(y1), int(x2), int(y2)), xadd-xsub, yadd-ysub
+    if zoom > 2 and zoom < 4:
+        c = 11.25
+        box, xof, yof = get_safe_box(*box, halfsize)
+        cropped: Image.Image = halfsize.crop(box)
+        zoom /= 2
+    elif zoom >= 4:
+        c = 5.625
+        box, xof, yof = get_safe_box(*box, quartersize)
+        cropped: Image.Image = quartersize.crop(box)
+        zoom /= 4
+    else:
+        box, xof, yof = get_safe_box(*box, mapoftheworld)
+        cropped: Image.Image = mapoftheworld.crop(box)
+    pin = Image.open('./static/pin.png')
+    pin = pin.resize((int(pin.width*zoom/2), int(pin.height*zoom/2)))
+    cropped.paste(pin, (int(cropped.width/2-xof), int(cropped.height/2-yof)), pin)
     s = BytesIO()
     cropped.save(s, format='jpeg')
     val = s.getvalue()
@@ -53,7 +67,7 @@ def get_image():
     posy = int(request.args['y'])
     zoom = float(request.args['z'])
     box = (int(posx-28*zoom), int(posy-20*zoom), int(posx+28*zoom), int(posy+20*zoom))
-    image = request_image(box)
+    image = request_image(box, float(zoom))
     return 'data:image/jpeg;base64,'+b64encode(image).decode()
 
 @app.route('/select')
@@ -61,7 +75,11 @@ def select():
     f = open('respond.html')
     r = f.read()
     f.close()
-    cookies = request.headers.get('Cookie').split(';')
+    cookie = request.headers.get('Cookie')
+    if type(cookie) == str:
+        cookies = cookie.split(';')
+    else:
+        cookies = []
     for i in cookies:
         if i.split('=')[0].removeprefix(' ') == 'answer':
             cookies.remove(i)
@@ -75,8 +93,8 @@ def select():
     answer = random.choice(chosen)
     pos = answer.split('=')[1].split('l')
     
-    box = (int(pos[0])-28, int(pos[1])-20, int(pos[0])+28, int(pos[1])+20)
-    image = request_image(box)
+    box = (int(int(pos[0])-28*float(pos[2])/10), int(int(pos[1])-20*float(pos[2])/10), int(int(pos[0])+28*float(pos[2])/10), int(int(pos[1])+20*float(pos[2])/10))
+    image = request_image(box, float(pos[2])/10)
     r = r.replace('mapimage', 'data:image/jpeg;base64,'+b64encode(image).decode())
     rp = make_response(r)
     rp.set_cookie('answer', answer.split('=')[0])
@@ -88,7 +106,8 @@ def add_loc():
     name = request.args['name']
     x = request.args['xpos']
     y = request.args['ypos']
-    r.set_cookie(name, f"{x}l{y}")
+    z = request.args['zpos']
+    r.set_cookie(name, f"{x}l{y}l{z}")
     return r
 @app.route('/remove')
 def remove():
@@ -110,7 +129,11 @@ def management():
 
 @app.route('/check')
 def check():
-    cookies = request.headers.get('Cookie').split(';')
+    cookie = request.headers.get('Cookie')
+    if type(cookie) == str:
+        cookies = cookie.split(';')
+    else:
+        cookies = []
     correct = ''
     for i in cookies:
         if i.split('=')[0].removeprefix(' ') == 'answer':

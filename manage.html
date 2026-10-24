@@ -23,6 +23,7 @@
             margin-top: 5px;
             padding: 5px;
             overflow: hidden;
+            margin-right: 10px;
         }
         input[type="text"]{
             border-radius: 10px;
@@ -75,6 +76,10 @@
                 add += '</div>';
             }
             document.body.innerHTML += add;
+            $.get('/request_image?x='+0+'&y='+0+'&z='+1, function(data, status){
+                preview.src = data;
+            })
+            lastzoom = 1;
         }
         function getpos(e) {
             var rect = e.target.getBoundingClientRect();
@@ -103,27 +108,27 @@
         }
     </script>
     <body onload="createps()">
-         <p class="namelabel">Add a new location</p>
-        <div class="container">
-            <form action="/add_location" class="addform">
-                <input type="text" id="name" name="name" class="padded fillall" placeholder="Location name">
-                <hr width="90%" size="1" noshade="" color="#AAAAAA">
-                <div id="map">
-                    <img src="thumbnail-image" onload="document.getElementById('map').onclick = getpos">
-                    <img src="static/pin.png" class="selector" id="sel" width="10" height="10">
-                </div>
-                <input type="number" name="xpos" id="xpos" class="posinput" value="0">
-                <input type="number" name="ypos" id="ypos" class="posinput" value="0">
-                <input type="range" min="1" max="50" value="10" class="slider" id="zoomslider" onmousemove="changezoom()">
-                <input type="submit" value="Add", class="padded">
-            </form>
-        </div>
-        <div class="container">
-            <p class="namelabel">Preview:</p><br>
-            <img id="preview" src="" width="630" height="450">
+        <p class="namelabel">Add a new location</p>
+        <div style="display: flex;">
+            <div class="container">
+                <form action="/add_location" class="addform">
+                    <input type="text" id="name" name="name" class="padded fillall" placeholder="Location name">
+                    <hr width="90%" size="1" noshade="" color="#AAAAAA">
+                    <div id="map">
+                        <img src="thumbnail-image" onload="document.getElementById('map').onclick = getpos">
+                        <img src="static/pin.png" class="selector" id="sel" width="10" height="10">
+                    </div>
+                    <input type="number" name="xpos" id="xpos" class="posinput" value="0">
+                    <input type="number" name="ypos" id="ypos" class="posinput" value="0">
+                    <input type="range" min="5" max="50" value="10" class="slider" id="zoomslider" name="zpos" onmousemove="changezoom()">
+                    <input type="submit" value="Add", class="padded">
+                </form>
+            </div>
+            <div class="container">
+                <p class="namelabel">Preview:</p><br>
+                <img id="preview" src="" width="630" height="450">
+            </div>
         </div>
         <hr noshade color="#AAAAAA" size="1">
-        <script>
-        </script>
     </body>
 </html>
