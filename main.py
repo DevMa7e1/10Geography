@@ -90,6 +90,10 @@ def select():
     for i in cookies:
         if i.split('=')[0].removeprefix(' ') == 'answer':
             cookies.remove(i)
+    if cookies == []:
+        rp = make_response("Error 400:\nPlease add at least one location. <a href='/manage_locations'><button>Go back</button></a>")
+        rp.status_code = 400
+        return rp
     chosen = []
     for i in range(4):
         choice = random.choice(cookies)
@@ -154,5 +158,19 @@ def check():
         rp = make_response('Wrong answer! It was actually '+correct+'.<br><a href="/select"><button>Next</button></a>')
         rp.delete_cookie('answer')
         return rp
+
+@app.route('/favicon.ico')
+def favicon():
+    f = open('favicon.ico', 'rb')
+    r = f.read()
+    f.close()
+    return r
+
+@app.route('/')
+def main():
+    f = open('index.html')
+    r = f.read()
+    f.close()
+    return r
 
 app.run('0.0.0.0', 7555)

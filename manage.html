@@ -3,7 +3,13 @@
     <head>
         <title>Modify randomized list</title>
     </head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
     <style>
+        body{
+            font-family: "Lato", sans-serif;
+        }
         .namelabel{
             font-size: 20px;
             padding-left: 4px;
@@ -47,7 +53,6 @@
             border-radius: 10px;
             border-width: 0px;
             padding: 5px;
-            margin-top: 5px;
         }
         .right{
             float: right;
@@ -66,13 +71,36 @@
         }
         .disclaimer{
             font-size: 15px;
-            font-family: Arial, Helvetica, sans-serif;
-            font-weight: lighter;
+            font-weight: 300;
             color: gray;
         }
         .grid{
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+        header{
+            background-color: #BBBBBB;
+            height: min-content;
+            width: 100%-4px;
+            border-radius: 8px;
+            display: flex;
+            padding: 4px;
+            margin-bottom: 32px;
+        }
+        h1{
+            font-size: 64px;
+            height: 64px;
+            margin: 0px;
+            padding: 0px;
+            font-weight: 300;
+            line-height: 54px;
+        }
+        .spacer{
+            width: 2px;
+            height: 64px;
+            background-color: gray;
+            margin-right: 16px;
+            margin-left: 16px;
         }
     </style>
     <script src="static/jquery.js"></script>
@@ -171,6 +199,14 @@
         }
     </script>
     <body onload="createps()">
+        <header>
+            <img src="favicon.ico" width="64" height="64">
+            <h1>10Geography</h1>
+            <div class="spacer"></div>
+            <a style="height: 64px;" href="/select">
+                <button style="font-size: 16px; height: 100%;">Go to quiz mode >>></button>
+            </a>
+        </header>
         <p class="namelabel">Add a new location</p>
         <div style="display: flex;">
             <div class="container">
