@@ -103,11 +103,11 @@
             margin-left: 16px;
         }
     </style>
-    <script src="static/jquery.js"></script>
+    <script src="https://code.jquery.com/jquery-4.0.0.min.js" integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao=" crossorigin="anonymous"></script>
     <script>
         const worldmap = new Image();
         const pin = new Image();
-        pin.src = '/static/pin.png'
+        pin.src = 'static/pin.png'
         $.get('/request_full', function(data, status){
             worldmap.src = data;
         });
@@ -116,7 +116,7 @@
             let cookies = document.cookie.split('; ');
             if(document.cookie != ''){
                 for(let i = 0; i < cookies.length; i++){
-                    if(cookies[i].split('=')[0] != 'answer'){
+                    if(cookies[i].split('=')[0] != 'answer' && !cookies[i].includes('_')){
                         add += '<div class="container" style="width: 240px;">';
                         add += '<p>' + cookies[i].split('=')[0] + '</p>';
                         add += '<a href="/remove?name=' + cookies[i].split('=')[0] + '"><button class="right">Delete</button></a><br>';
@@ -174,8 +174,7 @@
         }
         function makepreview(x, y, z){
             const ctx = preview.getContext('2d');
-            const c = 5.625;
-            z /= 2;
+            const c = 11.25;
             let p = get_safe_box(Math.round(x * c)-315*z, Math.round(y * c)-225*z, Math.round(x * c)+315*z, Math.round(y * c)+225*z)
             ctx.drawImage(worldmap, p[0][0], p[0][1], 630*z, 450*z, 0, 0, 630, 450);
             ctx.drawImage(pin, 0, 0, 50, 50, Math.round(630/2-10-p[1]/z), Math.round(450/2-10-p[2]/z), 20, 20);
@@ -227,7 +226,6 @@
             <div class="container">
                 <p class="namelabel">Preview:</p><br>
                 <canvas id="preview" style="border: 1px solid black;" width="630" height="450"></canvas>
-                <p class="disclaimer">*Low resolution preview. For more terrain detail, go to quiz mode.</p>
             </div>
         </div>
         <hr noshade color="#AAAAAA" size="1">

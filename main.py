@@ -1,21 +1,15 @@
-from flask import Flask, request, redirect, make_response, render_template
+from flask import Flask, request, redirect, make_response
 import random
-from PIL import Image
-Image.MAX_IMAGE_PIXELS = 233280000
+import pyvips
 from base64 import b64encode
-from io import BytesIO
+from gc import collect
 
 app = Flask(__name__)
-mapoftheworld = Image.open('./data/map.jpg')
-print("Preparing world map...")
-halfsize = mapoftheworld.resize((mapoftheworld.width//2, mapoftheworld.height//2), resample=Image.Resampling.NEAREST)
-quartersize = mapoftheworld.resize((mapoftheworld.width//4, mapoftheworld.height//4), resample=Image.Resampling.NEAREST)
-initcrop = mapoftheworld.crop((0, 0, 100, 100))
-del initcrop
-print("Done!\n")
+mapoftheworld = pyvips.Image.new_from_file('data/map.jpg', access="random", memory=True)
 
 def request_image(box: tuple[int, int, int, int], zoom: float = 1.0):
-    c = 22.5
+    global mapoftheworld
+    c = 11.25
     def get_safe_box(rx1, ry1, rx2, ry2, image):
         x1 = rx1*c; y1 = ry1*c; x2 = rx2*c; y2 = ry2*c
         xadd = 0
@@ -38,27 +32,16 @@ def request_image(box: tuple[int, int, int, int], zoom: float = 1.0):
                     y2 -= ysub
         x1 -= xsub
         y1 -= ysub
-        return (int(x1), int(y1), int(x2), int(y2)), xadd-xsub, yadd-ysub
-    if zoom > 2 and zoom < 4:
-        c = 11.25
-        box, xof, yof = get_safe_box(*box, halfsize)
-        cropped: Image.Image = halfsize.crop(box)
-        zoom /= 2
-    elif zoom >= 4:
-        c = 5.625
-        box, xof, yof = get_safe_box(*box, quartersize)
-        cropped: Image.Image = quartersize.crop(box)
-        zoom /= 4
-    else:
-        box, xof, yof = get_safe_box(*box, mapoftheworld)
-        cropped: Image.Image = mapoftheworld.crop(box)
-    pin = Image.open('./static/pin.png')
-    pin = pin.resize((int(pin.width*zoom/2), int(pin.height*zoom/2)))
-    cropped.paste(pin, (int(cropped.width/2-xof), int(cropped.height/2-yof)), pin)
-    s = BytesIO()
-    cropped.save(s, format='jpeg')
-    val = s.getvalue()
-    s.close()
+        return (int(x1), int(y1), int(x2)-int(x1), int(y2)-int(y1)), xadd-xsub, yadd-ysub
+    box, xof, yof = get_safe_box(*box, mapoftheworld)
+    cropped: pyvips.Image = mapoftheworld.crop(*box)
+    pin = pyvips.Image.new_from_file('./static/pin.png')
+    pin = pin.resize(zoom*(0.4))
+    cropped = cropped.composite(pin, 'over', x=(int(cropped.width/2-xof)), y=int(cropped.height/2-yof))
+    val = cropped.write_to_buffer('.jpg[Q=50]')
+    del pin
+    del cropped
+    collect()
     return val
 
 @app.route('/request_image')
@@ -72,10 +55,9 @@ def get_image():
 
 @app.route('/request_full')
 def get_full():
-    s = BytesIO()
-    quartersize.save(s, format='jpeg')
-    val = s.getvalue()
-    s.close()
+    f = open('data/map.jpg', 'rb')
+    val = f.read()
+    f.close()
     return 'data:image/jpeg;base64,'+b64encode(val).decode()
 @app.route('/select')
 def select():
@@ -87,8 +69,11 @@ def select():
         cookies = cookie.split(';')
     else:
         cookies = []
-    for i in cookies:
-        if i.split('=')[0].removeprefix(' ') == 'answer':
+    c = cookies.copy()
+    for i in c:
+        if 'answer' in i:
+            cookies.remove(i)
+        if '_' in i:
             cookies.remove(i)
     if cookies == []:
         rp = make_response("Error 400:\nPlease add at least one location. <a href='/manage_locations'><button>Go back</button></a>")
@@ -140,22 +125,33 @@ def management():
 
 @app.route('/check')
 def check():
-    cookie = request.headers.get('Cookie')
-    if type(cookie) == str:
-        cookies = cookie.split(';')
+    f = open('answer.html')
+    r = f.read()
+    f.close()
+    if len(request.args.keys()) > 0:
+        cookie = request.headers.get('Cookie')
+        if type(cookie) == str:
+            cookies = cookie.split(';')
+        else:
+            cookies = []
+        correct = ''
+        for i in cookies:
+            if i.split('=')[0].removeprefix(' ') == 'answer':
+                correct = i.split('=')[1].removeprefix('"').removesuffix('"')
+
+        if correct.removeprefix(' ') == request.args['ch']:
+            r = r.replace('%ans', ' correct!').replace('%cor', '')
+            rp = make_response(r)
+            rp.delete_cookie('answer')
+            return rp
+        else:
+            r = r.replace('%ans', ' wrong.').replace('%cor', f'Correct answer: {correct}')
+            rp = make_response(r)
+            rp.delete_cookie('answer')
+            return rp
     else:
-        cookies = []
-    correct = ''
-    for i in cookies:
-        if i.split('=')[0].removeprefix(' ') == 'answer':
-            correct = i.split('=')[1].removeprefix('"').removesuffix('"')
-    
-    if correct.removeprefix(' ') == request.args['ch']:
-        rp = make_response('Yay! Correct answer!<br><a href="/select"><button>Next</button></a>')
-        rp.delete_cookie('answer')
-        return rp
-    else:
-        rp = make_response('Wrong answer! It was actually '+correct+'.<br><a href="/select"><button>Next</button></a>')
+        r = r.replace('%ans', ': pass.').replace('%cor', f'No answer has been given.')
+        rp = make_response(r)
         rp.delete_cookie('answer')
         return rp
 
@@ -172,5 +168,3 @@ def main():
     r = f.read()
     f.close()
     return r
-
-app.run('0.0.0.0', 7555)
